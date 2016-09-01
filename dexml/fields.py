@@ -4,11 +4,12 @@ dexml.fields:  basic field type definitions for dexml
 =====================================================
 
 """
+import datetime
 
 import dexml
 import random
 from xml.sax.saxutils import escape, quoteattr
-from utils import strptime_ISO_8601
+from utils import strptime_ISO_8601, ISO_8601_UTC
 
 #  Global counter tracking the order in which fields are declared.
 _order_counter = 0
@@ -37,7 +38,7 @@ class Field(object):
       * parse_child_node:    parse into out of an XML child node
       * render_attributes:   render XML for node attributes
       * render_children:     render XML for child nodes
-      
+
     """
 
     class arguments:
@@ -63,7 +64,7 @@ class Field(object):
         """Parse any attributes for this field from the given list.
 
         This method will be called with the Model instance being parsed and
-        a list of attribute nodes from its XML tag.  Any attributes of 
+        a list of attribute nodes from its XML tag.  Any attributes of
         interest to this field should be processed, and a list of the unused
         attribute nodes returned.
         """
@@ -352,6 +353,15 @@ class DateTime(Value):
 
         return strptime_ISO_8601(val if val[0] == '-' else val[1:])
 
+    def render_value(self, val):
+        """
+        Times will be returned as utc times. if you care about timezones
+        you'll need to add some tzinfo implementation and custom formatting.
+        """
+        if not isinstance(val, datetime.datetime):
+            raise TypeError('DateTime Field expects a datetime.datetime object')
+        return val.strftime(ISO_8601_UTC)
+
 
 class Integer(Value):
     """Field representing a simple integer value."""
@@ -370,7 +380,7 @@ class Boolean(Value):
 
     The strings corresponding to false are 'no', 'off', 'false' and '0',
     compared case-insensitively.  Note that this means an empty tag or
-    attribute is considered True - this is usually what you want, since 
+    attribute is considered True - this is usually what you want, since
     a completely missing attribute or tag can be interpreted as False.
 
     To enforce that the presence of a tag indicates True and the absence of
@@ -449,7 +459,7 @@ class Model(Field):
         except KeyError:
             self.__dict__['typeclass'] = self._load_typeclass()
             return self.__dict__['typeclass']
- 
+
     def _load_typeclass(self):
         typ = self.type
         if isinstance(typ,dexml.ModelMetaclass):
@@ -597,7 +607,7 @@ class List(Field):
 
     def render_children(self,obj,items,nsmap):
         #  Create a generator that yields child data chunks, and validates
-        #  the number of items in the list as it goes.  It allows any 
+        #  the number of items in the list as it goes.  It allows any
         #  iterable to be passed in, not just a list.
         def child_chunks():
             num_items = 0
