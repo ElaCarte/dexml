@@ -5,6 +5,11 @@ dexml.utils:  misc utils
 
 """
 
+import re
+import datetime
+
+ISO_8601_UTC = "%Y-%m-%dT%H:%M:%S.%fZ"
+
 def strptime_ISO_8601(time_str):
     """
 
@@ -19,7 +24,7 @@ def strptime_ISO_8601(time_str):
     __author__ = "markddavidoff"
 
     :param time_str: ISO_8601 format string
-    :return: utc timezone datetime.dateimte object
+    :return: utc timezone datetime.dateimte object and offset as a string
     """
 
     # this regex removes all colons and all
