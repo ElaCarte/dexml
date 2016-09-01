@@ -36,7 +36,7 @@ class Field(object):
       * parse_child_node:    parse into out of an XML child node
       * render_attributes:   render XML for node attributes
       * render_children:     render XML for child nodes
-      
+
     """
 
     class arguments:
@@ -62,7 +62,7 @@ class Field(object):
         """Parse any attributes for this field from the given list.
 
         This method will be called with the Model instance being parsed and
-        a list of attribute nodes from its XML tag.  Any attributes of 
+        a list of attribute nodes from its XML tag.  Any attributes of
         interest to this field should be processed, and a list of the unused
         attribute nodes returned.
         """
@@ -315,6 +315,45 @@ class Value(Field):
         return escape(self.render_value(val))
 
 
+class Enumeration(Value):
+    """Field representing an enum. Provide a list of possible string values
+        in init, field must be a string that is one of them"""
+
+    def __init__(self, list_of_values, **kwds):
+        """
+        :param list_of_values: is a tuple/list of strings representing enum
+            states, e.g. ("CreditCard", "GiftCard")
+        :param kwds: args passed to Value
+        """
+        self._list_of_values = list_of_values
+        super(Enumeration,self).__init__(**kwds)
+
+    @property
+    def values(self):
+        """ return reference to list of valid enum values """
+        return self._list_of_values
+
+    def parse_value(self, val):
+        try:
+            if not isinstance(val, basestring):
+                raise TypeError('Enumeration value {} must be of type `string`'.format(val))
+        except:
+            raise TypeError('Enumeration value must be of type `string`')
+
+        if val not in self._list_of_values :
+            raise ValueError('Enumeration value must be one of {}'.format(self.list_of_values))
+        return val
+
+    def render_value(self, val):
+        try:
+            if not isinstance(val, basestring):
+                raise TypeError('Enumeration value {} must be of type `string`'.format(val))
+        except:
+            raise TypeError('Enumeration value must be of type `string`')
+        if val not in self._list_of_values:
+            raise ValueError('Enumeration value must be one of {}'.format(self.list_of_values))
+        return val
+
 
 class String(Value):
     """Field representing a simple string value."""
@@ -353,7 +392,7 @@ class Boolean(Value):
 
     The strings corresponding to false are 'no', 'off', 'false' and '0',
     compared case-insensitively.  Note that this means an empty tag or
-    attribute is considered True - this is usually what you want, since 
+    attribute is considered True - this is usually what you want, since
     a completely missing attribute or tag can be interpreted as False.
 
     To enforce that the presence of a tag indicates True and the absence of
@@ -432,7 +471,7 @@ class Model(Field):
         except KeyError:
             self.__dict__['typeclass'] = self._load_typeclass()
             return self.__dict__['typeclass']
- 
+
     def _load_typeclass(self):
         typ = self.type
         if isinstance(typ,dexml.ModelMetaclass):
@@ -580,7 +619,7 @@ class List(Field):
 
     def render_children(self,obj,items,nsmap):
         #  Create a generator that yields child data chunks, and validates
-        #  the number of items in the list as it goes.  It allows any 
+        #  the number of items in the list as it goes.  It allows any
         #  iterable to be passed in, not just a list.
         def child_chunks():
             num_items = 0
