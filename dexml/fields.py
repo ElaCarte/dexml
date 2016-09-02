@@ -317,6 +317,45 @@ class Value(Field):
         return escape(self.render_value(val))
 
 
+class Enumeration(Value):
+    """Field representing an enum. Provide a list of possible string values
+        in init, field must be a string that is one of them"""
+
+    def __init__(self, list_of_values, **kwds):
+        """
+        :param list_of_values: is a tuple/list of strings representing enum
+            states, e.g. ("CreditCard", "GiftCard")
+        :param kwds: args passed to Value
+        """
+        self._list_of_values = list_of_values
+        super(Enumeration,self).__init__(**kwds)
+
+    @property
+    def values(self):
+        """ return reference to list of valid enum values """
+        return self._list_of_values
+
+    def parse_value(self, val):
+        try:
+            if not isinstance(val, basestring):
+                raise TypeError('Enumeration value {} must be of type `string`'.format(val))
+        except:
+            raise TypeError('Enumeration value must be of type `string`')
+
+        if val not in self._list_of_values :
+            raise ValueError('Enumeration value must be one of {}'.format(self.list_of_values))
+        return val
+
+    def render_value(self, val):
+        try:
+            if not isinstance(val, basestring):
+                raise TypeError('Enumeration value {} must be of type `string`'.format(val))
+        except:
+            raise TypeError('Enumeration value must be of type `string`')
+        if val not in self._list_of_values:
+            raise ValueError('Enumeration value must be one of {}'.format(self.list_of_values))
+        return val
+
 
 class String(Value):
     """Field representing a simple string value."""
